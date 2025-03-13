@@ -1,8 +1,10 @@
+package com.example.coffetable // Change this to match your actual package name
+
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -10,8 +12,10 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.camera.view.PreviewView // Ensure this import is present
 import org.tensorflow.lite.Interpreter
 import java.io.BufferedReader
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.MappedByteBuffer
@@ -24,8 +28,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main) // Ensure this matches your layout file name
 
+        // Request camera permissions
+        requestCameraPermission()
+    }
+
+    private fun requestCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             loadModel()
             startCamera()
@@ -36,15 +45,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadModel() {
         try {
-            tflite = Interpreter(loadModelFile("yolov5s.tflite")) // Dosya adını gerektiği gibi ayarlayın
+            tflite = Interpreter(loadModelFile("yolov5s.tflite"))
             labels = loadLabels()
         } catch (e: Exception) {
-            Log.e("YOLO", "Model yüklenirken hata", e)
+            Log.e("YOLO", "Model loading error", e)
         }
     }
 
     private fun loadModelFile(modelFilename: String): MappedByteBuffer {
-        val fileDescriptor = this.assets.openFd(modelFilename)
+        val fileDescriptor = assets.openFd(modelFilename)
         val fileChannel = FileInputStream(fileDescriptor.fileDescriptor).channel
         val startOffset = fileDescriptor.startOffset
         val declaredLength = fileDescriptor.declaredLength
@@ -52,18 +61,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadLabels(): List<String> {
-        val labels = mutableListOf<String>()
+        val labelsList = mutableListOf<String>()
         try {
             BufferedReader(InputStreamReader(assets.open("coco_labels.txt"))).use { br ->
                 var line: String?
                 while (br.readLine().also { line = it } != null) {
-                    labels.add(line!!)
+                    labelsList.add(line!!)
                 }
             }
         } catch (e: IOException) {
-            Log.e("YOLO", "Etiketler yüklenirken hata", e)
+            Log.e("YOLO", "Error loading labels", e)
         }
-        return labels
+        return labelsList
     }
 
     private fun startCamera() {
@@ -72,14 +81,23 @@ class MainActivity : AppCompatActivity() {
             try {
                 val preview = Preview.Builder().build()
                 val imageAnalysis = ImageAnalysis.Builder().build()
-                val cameraSelector = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+                val cameraSelector = CameraSelector.Builder()
+                    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                    .build()
 
-                preview.setSurfaceProvider(findViewById(R.id.previewView).surfaceProvider)
+                // Ensure we are using PreviewView
+                val previewView = findViewById<PreviewView>(R.id.previewView)
+
+                // Set the surface provider for preview
+                preview.setSurfaceProvider(previewView.surfaceProvider)
+
+                // Set the image analyzer
                 imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), ObjectAnalyzer(tflite, labels))
 
+                // Bind the camera lifecycle to this activity
                 cameraProviderFuture.get().bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("CameraX", "Error starting camera", e)
             }
         }, ContextCompat.getMainExecutor(this))
     }
@@ -87,15 +105,14 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // İzin verildi, kamerayı başlat
-                loadModel() // İhtiyaç varsa modeli yeniden yükle
-                startCamera()
-            } else {
-                // İzin reddedildi
-                Log.e("Camera Permission", "İzin reddedildi")
-                // Kullanıcıya kameraya erişimin gerekli olduğu hakkında bildirimde bulunabilirsiniz
+        when (requestCode) {
+            REQUEST_CAMERA_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    loadModel()
+                    startCamera()
+                } else {
+                    Log.e("Camera Permission", "Permission denied")
+                }
             }
         }
     }
