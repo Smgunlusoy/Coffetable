@@ -1,29 +1,37 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android") // Use the Kotlin DSL for Android
-    id("kotlin-kapt") // If you are using KAPT for annotations
+    id("com.android.application") version "8.0.2"
+    id("org.jetbrains.kotlin.android") version "1.8.21"
+    id("kotlin-parcelize")
+    id("kotlin-kapt")
 }
 
 android {
-    compileSdk = 34 // Update this to at least 33
+    compileSdk = 34
 
     namespace = "com.example.coffetable"
 
     defaultConfig {
         applicationId = "com.example.coffetable"
-        minSdk = 21 // or your minimum SDK version
-        targetSdk = 34 // Keep this updated to the latest stable version
+        minSdk = 21
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        kapt {
+            arguments {
+                // Specify any arguments needed by the annotation processor
+                arg("key", "value") // Example argument
+            }
+        }
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8 // Set this to 1.8
-        targetCompatibility = JavaVersion.VERSION_1_8 // Set this to 1.8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "1.8" // Ensure this matches the Java versions
+        jvmTarget = "17"
     }
 
     buildTypes {
@@ -36,19 +44,35 @@ android {
     viewBinding {
         enable = true
     }
+
+    // Compose options
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.0"
+    }
 }
 
 dependencies {
+    // AndroidX dependencies
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.10.0")
-    implementation("androidx.camera:camera-core:1.2.0")
-    implementation("androidx.camera:camera-camera2:1.2.0")
-    implementation("androidx.camera:camera-lifecycle:1.2.0")
-    implementation("androidx.camera:camera-view:1.2.0") // Use the latest version available
-    implementation("org.tensorflow:tensorflow-lite:2.6.0")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.6.0") // if you're using GPU
-    implementation("com.google.android.material:material:1.9.0") // Keep updated
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.0") // Ensure this matches your Kotlin plugin version
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
+    implementation("androidx.activity:activity-compose:1.4.0") // Update to the latest version
 
-    // Add other dependencies as needed...
+    // CameraX dependencies
+    implementation("androidx.camera:camera-core:1.3.0")
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
+
+    // TensorFlow Lite dependencies
+    implementation("org.tensorflow:tensorflow-lite:2.11.0") // En güncel sürümü kullanın
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.11.0") // En güncel sürümü kullanın
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.21") // Kotlin.
+
+    // Jetpack Compose dependencies
+    implementation("androidx.compose.ui:ui:1.4.3")
+    implementation("androidx.compose.material3:material3:1.0.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
+    implementation("androidx.compose.ui:ui-tooling:1.4.0") // Debug tools for Compose
 }

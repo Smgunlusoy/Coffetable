@@ -1,5 +1,11 @@
+// build.gradle.kts (Project Level)
+
 plugins {
-    id("com.android.application") version "8.1.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.7.0" apply false
-    id("kotlin-kapt") // Keep this included if you're using KAPT for annotations
+    id("com.android.application") version "8.0.2" apply false
+    id("org.jetbrains.kotlin.android") version "1.8.21" apply false
+}
+
+allprojects {
+    repositories {
+    }
 }
