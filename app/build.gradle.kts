@@ -1,6 +1,6 @@
 plugins {
     id("com.android.application") version "8.0.2"
-    id("org.jetbrains.kotlin.android") version "1.8.21"
+    id("org.jetbrains.kotlin.android") version "1.8.0"
     id("kotlin-parcelize")
     id("kotlin-kapt")
 }
@@ -33,7 +33,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
+    buildFeatures {
+        compose = true
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
